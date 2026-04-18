@@ -105,14 +105,9 @@ class LexusAUCoordinator(DataUpdateCoordinator[LexusAUSnapshot]):
             predicate=lambda snapshot: snapshot.status.engine_running is False,
         )
 
-    async def async_flash_hazards_na_trial(self) -> None:
-        """Run the NA-style trial hazard flash sequence."""
-        await self.client.async_flash_hazards_na_trial()
-        await self.async_refresh_vehicle()
-
-    async def async_flash_hazards_eu_trial(self) -> None:
-        """Run the EU-style trial hazard flash sequence."""
-        await self.client.async_flash_hazards_eu_trial()
+    async def async_flash_hazards(self) -> None:
+        """Flash hazards using the confirmed command sequence."""
+        await self.client.async_flash_hazards()
         await self.async_refresh_vehicle()
 
     async def _async_request_remote_refresh(self) -> None:

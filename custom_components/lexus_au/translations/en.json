@@ -47,11 +47,8 @@
       "unlock_doors": {
         "name": "Unlock doors"
       },
-      "flash_hazards_na_trial": {
-        "name": "Flash hazards (NA trial)"
-      },
-      "flash_hazards_eu_trial": {
-        "name": "Flash hazards (EU trial)"
+      "flash_hazards": {
+        "name": "Flash hazards"
       },
       "engine_start": {
         "name": "Engine start"

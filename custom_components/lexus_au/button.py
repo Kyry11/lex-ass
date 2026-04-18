@@ -42,16 +42,10 @@ BUTTONS: tuple[LexusAUButtonDescription, ...] = (
         method_name="async_unlock_doors",
     ),
     LexusAUButtonDescription(
-        key="flash_hazards_na_trial",
-        translation_key="flash_hazards_na_trial",
+        key="flash_hazards",
+        translation_key="flash_hazards",
         icon="mdi:car-light-alert",
-        method_name="async_flash_hazards_na_trial",
-    ),
-    LexusAUButtonDescription(
-        key="flash_hazards_eu_trial",
-        translation_key="flash_hazards_eu_trial",
-        icon="mdi:car-light-alert",
-        method_name="async_flash_hazards_eu_trial",
+        method_name="async_flash_hazards",
     ),
 )
 

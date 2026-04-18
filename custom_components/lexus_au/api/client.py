@@ -201,25 +201,8 @@ class LexusAUClient:
             COMMAND_HAZARD_OFF, value=COMMAND_VALUE_OFF
         )
 
-    async def async_flash_hazards_na_trial(self) -> dict[str, Any]:
-        """Trial flash using the older NA legacy command pattern.
-
-        Based on the older NA implementation that sends `HZ` with values
-        `1` and `2`.
-        """
-        return await self._async_flash_hazards(
-            on_command="HZ",
-            off_command="HZ",
-            on_value=COMMAND_VALUE_ON,
-            off_value=COMMAND_VALUE_OFF,
-        )
-
-    async def async_flash_hazards_eu_trial(self) -> dict[str, Any]:
-        """Trial flash using the EU modern OneApp command pattern.
-
-        Based on the EU implementation that sends `hazard-on` and
-        `hazard-off` without a numeric `value`.
-        """
+    async def async_flash_hazards(self) -> dict[str, Any]:
+        """Flash hazards using the confirmed AU/EU-style command pattern."""
         return await self._async_flash_hazards(
             on_command=COMMAND_HAZARD_ON,
             off_command=COMMAND_HAZARD_OFF,
