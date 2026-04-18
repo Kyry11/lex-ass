@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
+import random
 from time import monotonic
 from typing import Callable
 
@@ -15,6 +16,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .api import LexusAUAuthError, LexusAUClient, LexusAURequestError, LexusAUSnapshot
 from .const import (
+    BACKGROUND_POLL_JITTER_RATIO,
+    BACKGROUND_POLL_MAX_BACKOFF_FACTOR,
     COMMAND_CONFIRMATION_POLL_INTERVAL_SECONDS,
     COMMAND_CONFIRMATION_TIMEOUT_SECONDS,
     CONF_REFRESH_INTERVAL_SECONDS,
@@ -40,11 +43,13 @@ class LexusAUCoordinator(DataUpdateCoordinator[LexusAUSnapshot]):
         self.entry = entry
         self.client = client
         self._command_confirmation_task: asyncio.Task | None = None
+        self._base_refresh_interval_seconds = entry.options.get(
+            CONF_REFRESH_INTERVAL_SECONDS,
+            DEFAULT_REFRESH_INTERVAL_SECONDS,
+        )
+        self._poll_failure_count = 0
         update_interval = timedelta(
-            seconds=entry.options.get(
-                CONF_REFRESH_INTERVAL_SECONDS,
-                DEFAULT_REFRESH_INTERVAL_SECONDS,
-            )
+            seconds=self._next_background_poll_seconds(),
         )
         super().__init__(
             hass,
@@ -58,11 +63,16 @@ class LexusAUCoordinator(DataUpdateCoordinator[LexusAUSnapshot]):
     async def _async_update_data(self) -> LexusAUSnapshot:
         """Fetch the latest vehicle snapshot."""
         try:
-            return await self.client.async_get_snapshot()
+            snapshot = await self.client.async_get_snapshot()
         except LexusAUAuthError as err:
+            self._apply_next_background_poll(success=False)
             raise ConfigEntryAuthFailed from err
         except (LexusAURequestError, httpx.HTTPError) as err:
+            self._apply_next_background_poll(success=False)
             raise UpdateFailed(str(err)) from err
+        else:
+            self._apply_next_background_poll(success=True)
+            return snapshot
 
     async def async_refresh_vehicle(self) -> None:
         """Request a fresh upload from the vehicle, then refresh coordinator data."""
@@ -211,6 +221,37 @@ class LexusAUCoordinator(DataUpdateCoordinator[LexusAUSnapshot]):
             await task
         except asyncio.CancelledError:
             pass
+
+    def _apply_next_background_poll(self, *, success: bool) -> None:
+        """Update the coordinator interval using jitter and capped backoff."""
+        if success:
+            self._poll_failure_count = 0
+        else:
+            self._poll_failure_count += 1
+
+        next_poll_seconds = self._next_background_poll_seconds()
+        self.update_interval = timedelta(seconds=next_poll_seconds)
+        LOGGER.debug(
+            "Next background poll in %.1fs (success=%s, consecutive_failures=%d)",
+            next_poll_seconds,
+            success,
+            self._poll_failure_count,
+        )
+
+    def _next_background_poll_seconds(self) -> float:
+        """Calculate the next background poll using jitter and capped backoff."""
+        backoff_factor = min(
+            2 ** self._poll_failure_count,
+            BACKGROUND_POLL_MAX_BACKOFF_FACTOR,
+        )
+        interval_seconds = self._base_refresh_interval_seconds * backoff_factor
+        jitter_window = interval_seconds * BACKGROUND_POLL_JITTER_RATIO
+        if jitter_window <= 0:
+            return float(interval_seconds)
+        return max(
+            1.0,
+            interval_seconds + random.uniform(-jitter_window, jitter_window),
+        )
 
 
 def _snapshot_is_locked(snapshot: LexusAUSnapshot) -> bool:
