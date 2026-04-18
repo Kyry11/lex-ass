@@ -16,6 +16,8 @@ REMOTE_STATUS_PATH = "/v1/global/remote/status"
 REMOTE_REFRESH_PATH = "/v1/global/remote/refresh-status"
 REMOTE_COMMAND_PATH = "/v1/global/remote/command"
 VEHICLE_GUID_PATH = "/v2/vehicle/guid"
+TELEMETRY_V2_PATH = "/v2/telemetry"
+TELEMETRY_V3_PATH = "/v3/telemetry"
 
 CLIENT_ID = "oneapp"
 REDIRECT_URI = "com.toyota.oneapp:/oauth2Callback"

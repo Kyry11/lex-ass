@@ -52,6 +52,8 @@ from .const import (
     REMOTE_COMMAND_PATH,
     REMOTE_REFRESH_PATH,
     REMOTE_STATUS_PATH,
+    TELEMETRY_V2_PATH,
+    TELEMETRY_V3_PATH,
     TOKEN_BASIC_AUTH,
     USER_AGENT,
     VEHICLE_GUID_PATH,
@@ -65,6 +67,7 @@ LOGGER = logging.getLogger(__name__)
 _PKCE_CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"
 _TRIAL_HAZARD_FLASH_DURATION_SECONDS = 1.0
 _TRIAL_HEADLIGHT_FLASH_DURATION_SECONDS = 1.0
+_UNSET = object()
 
 
 class LexusAUClient:
@@ -98,6 +101,7 @@ class LexusAUClient:
         self._token: LexusAUToken | None = None
         self._device_registered = False
         self._vehicle_overview = LexusAUVehicleOverview(vin=self._vin)
+        self._telemetry_path: str | object = _UNSET
 
     async def async_close(self) -> None:
         """Close underlying HTTP resources."""
@@ -148,6 +152,9 @@ class LexusAUClient:
             REMOTE_STATUS_PATH,
             include_vin_header=True,
         )
+        telemetry_payload = await self._async_get_telemetry_best_effort()
+        if telemetry_payload is not None:
+            payload = _merge_payload_sections(payload, telemetry_payload)
         return LexusAUStatus.from_payload(payload)
 
     async def async_refresh_remote_status(self) -> dict[str, Any]:
@@ -278,6 +285,35 @@ class LexusAUClient:
             include_vin_header=True,
             json_body=body,
         )
+
+    async def _async_get_telemetry_best_effort(self) -> dict[str, Any] | None:
+        """Fetch telemetry from the first working known endpoint, if any."""
+        if self._telemetry_path is None:
+            return None
+
+        candidate_paths: list[str]
+        if isinstance(self._telemetry_path, str):
+            candidate_paths = [self._telemetry_path]
+        else:
+            candidate_paths = [TELEMETRY_V2_PATH, TELEMETRY_V3_PATH]
+
+        for path in candidate_paths:
+            try:
+                payload = await self._async_api_request(
+                    "GET",
+                    path,
+                    include_vin_header=True,
+                )
+            except LexusAURequestError as err:
+                LOGGER.debug("Telemetry request %s failed: %s", path, err)
+                continue
+
+            self._telemetry_path = path
+            return payload
+
+        self._telemetry_path = None
+        LOGGER.debug("No supported telemetry endpoint found for this AU backend")
+        return None
 
     async def async_login(self, *, force: bool = False) -> None:
         """Authenticate and ensure device registration."""
@@ -715,3 +751,22 @@ def _expect_json_response(response: httpx.Response, step_name: str) -> dict[str,
             f"{step_name} returned {type(payload).__name__} instead of an object"
         )
     return payload
+
+
+def _payload_section(payload: dict[str, Any]) -> dict[str, Any]:
+    nested_payload = payload.get("payload")
+    if isinstance(nested_payload, dict):
+        return nested_payload
+    return payload
+
+
+def _merge_payload_sections(
+    primary_payload: dict[str, Any],
+    secondary_payload: dict[str, Any],
+) -> dict[str, Any]:
+    """Merge payload sections from two API responses into one wrapper."""
+    merged = dict(primary_payload)
+    merged_section = dict(_payload_section(primary_payload))
+    merged_section.update(_payload_section(secondary_payload))
+    merged["payload"] = merged_section
+    return merged
