@@ -101,14 +101,23 @@ class LexusAUStatus:
     @classmethod
     def from_payload(cls, payload: dict[str, Any]) -> "LexusAUStatus":
         """Create a normalized status object from an AU API payload."""
-        latitude, longitude = _extract_location(payload)
-        fuel_level, fuel_unit = _extract_numeric(payload, ("fuelLevel",))
+        status_payload = _status_payload(payload)
+        latitude, longitude = _extract_location(status_payload)
+        fuel_level, fuel_unit = _extract_numeric(status_payload, ("fuelLevel", "fugage"))
         distance_to_empty, distance_unit = _extract_numeric(
-            payload, ("distanceToEmpty", "range")
+            status_payload, ("distanceToEmpty", "range", "rage")
         )
-        odometer, odometer_unit = _extract_numeric(payload, ("odometer",))
-        last_vehicle_update = _extract_timestamp(payload, ("lastTimestamp", "timestamp"))
-        door_states = _extract_door_states(payload)
+        odometer, odometer_unit = _extract_numeric(status_payload, ("odometer", "odo"))
+        last_vehicle_update = _extract_timestamp(
+            status_payload,
+            (
+                "lastTimestamp",
+                "timestamp",
+                "occurrenceDate",
+                "locationAcquisitionDatetime",
+            ),
+        )
+        door_states = _extract_door_states(status_payload)
         all_doors_locked = _derive_all_doors_locked(door_states)
         driver_door_locked = _extract_driver_door_locked(door_states)
 
@@ -123,11 +132,11 @@ class LexusAUStatus:
             odometer=odometer,
             odometer_unit=odometer_unit,
             last_vehicle_update=last_vehicle_update,
-            engine_running=_extract_engine_state(payload),
+            engine_running=_extract_engine_state(status_payload),
             all_doors_locked=all_doors_locked,
             driver_door_locked=driver_door_locked,
             door_states=door_states,
-            raw=payload,
+            raw=status_payload,
         )
 
 
@@ -138,6 +147,14 @@ class LexusAUSnapshot:
     vehicle: LexusAUVehicleOverview
     status: LexusAUStatus
     refresh_request: dict[str, Any] | None = None
+
+
+def _status_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    """Return the nested AU status payload when present."""
+    nested_payload = payload.get("payload")
+    if isinstance(nested_payload, dict):
+        return nested_payload
+    return payload
 
 
 def _collect_objects(value: Any) -> list[dict[str, Any]]:
@@ -236,13 +253,13 @@ def _extract_engine_state(payload: dict[str, Any]) -> bool | None:
     return None
 
 
-_CATEGORY_TO_KEY = {
-    "Driver Side Door": "driver_side_door",
-    "Passenger Side Door": "passenger_side_door",
-    "Driver Side Rear Door": "rear_driver_side_door",
-    "Passenger Side Rear Door": "rear_passenger_side_door",
-    "Other Hatch": "hatch",
-    "Other Trunk": "trunk",
+_CATEGORY_SECTION_TO_KEY = {
+    ("Driver Side", "Door"): "driver_side_door",
+    ("Passenger Side", "Door"): "passenger_side_door",
+    ("Driver Side", "Rear Door"): "rear_driver_side_door",
+    ("Passenger Side", "Rear Door"): "rear_passenger_side_door",
+    ("Other", "Hatch"): "hatch",
+    ("Other", "Trunk"): "trunk",
 }
 
 
@@ -261,12 +278,16 @@ def _extract_door_states(payload: dict[str, Any]) -> dict[str, LexusAUDoorState]
         if not isinstance(category_label, str) or not isinstance(sections, list):
             continue
 
-        mapped_key = _CATEGORY_TO_KEY.get(category_label)
-        if mapped_key is None:
-            continue
-
         for section in sections:
             if not isinstance(section, dict):
+                continue
+
+            section_label = section.get("section")
+            if not isinstance(section_label, str):
+                continue
+
+            mapped_key = _CATEGORY_SECTION_TO_KEY.get((category_label, section_label))
+            if mapped_key is None:
                 continue
 
             values = section.get("values")
