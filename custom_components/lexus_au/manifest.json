@@ -1,10 +1,14 @@
 {
   "domain": "lexus_au",
   "name": "Lexus Connected AU",
+  "codeowners": [
+    "@OWNER"
+  ],
   "config_flow": true,
-  "documentation": "https://www.lexus.com.au/owners/apps/lexus-connected-app",
+  "documentation": "https://github.com/OWNER/REPO#readme",
   "integration_type": "service",
   "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/OWNER/REPO/issues",
   "single_config_entry": false,
   "version": "0.1.0"
 }
