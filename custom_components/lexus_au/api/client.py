@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import hashlib
 import json
@@ -56,6 +57,7 @@ from .redact import redact_mapping
 LOGGER = logging.getLogger(__name__)
 
 _PKCE_CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"
+_TRIAL_HAZARD_FLASH_DURATION_SECONDS = 1.0
 
 
 class LexusAUClient:
@@ -198,6 +200,47 @@ class LexusAUClient:
         return await self.async_send_remote_command(
             COMMAND_HAZARD_OFF, value=COMMAND_VALUE_OFF
         )
+
+    async def async_flash_hazards_na_trial(self) -> dict[str, Any]:
+        """Trial flash using the older NA legacy command pattern.
+
+        Based on the older NA implementation that sends `HZ` with values
+        `1` and `2`.
+        """
+        return await self._async_flash_hazards(
+            on_command="HZ",
+            off_command="HZ",
+            on_value=COMMAND_VALUE_ON,
+            off_value=COMMAND_VALUE_OFF,
+        )
+
+    async def async_flash_hazards_eu_trial(self) -> dict[str, Any]:
+        """Trial flash using the EU modern OneApp command pattern.
+
+        Based on the EU implementation that sends `hazard-on` and
+        `hazard-off` without a numeric `value`.
+        """
+        return await self._async_flash_hazards(
+            on_command=COMMAND_HAZARD_ON,
+            off_command=COMMAND_HAZARD_OFF,
+        )
+
+    async def _async_flash_hazards(
+        self,
+        *,
+        on_command: str,
+        off_command: str,
+        on_value: int | None = None,
+        off_value: int | None = None,
+    ) -> dict[str, Any]:
+        """Send a short on/off hazard sequence."""
+        on_response = await self.async_send_remote_command(on_command, value=on_value)
+        await asyncio.sleep(_TRIAL_HAZARD_FLASH_DURATION_SECONDS)
+        off_response = await self.async_send_remote_command(
+            off_command,
+            value=off_value,
+        )
+        return {"on": on_response, "off": off_response}
 
     async def async_send_remote_command(
         self, command: str, *, value: int | None = None
