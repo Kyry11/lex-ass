@@ -56,6 +56,38 @@ SENSORS: tuple[LexusAUSensorDescription, ...] = (
         value_attr="odometer",
         unit_attr="odometer_unit",
     ),
+    LexusAUSensorDescription(
+        key="front_left_tire_pressure",
+        translation_key="front_left_tire_pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        icon="mdi:car-tire-alert",
+        value_attr="front_left_tire_pressure",
+        unit_attr="front_left_tire_pressure_unit",
+    ),
+    LexusAUSensorDescription(
+        key="front_right_tire_pressure",
+        translation_key="front_right_tire_pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        icon="mdi:car-tire-alert",
+        value_attr="front_right_tire_pressure",
+        unit_attr="front_right_tire_pressure_unit",
+    ),
+    LexusAUSensorDescription(
+        key="rear_left_tire_pressure",
+        translation_key="rear_left_tire_pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        icon="mdi:car-tire-alert",
+        value_attr="rear_left_tire_pressure",
+        unit_attr="rear_left_tire_pressure_unit",
+    ),
+    LexusAUSensorDescription(
+        key="rear_right_tire_pressure",
+        translation_key="rear_right_tire_pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        icon="mdi:car-tire-alert",
+        value_attr="rear_right_tire_pressure",
+        unit_attr="rear_right_tire_pressure_unit",
+    ),
 )
 
 

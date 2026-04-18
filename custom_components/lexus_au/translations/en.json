@@ -71,6 +71,41 @@
         "name": "Buzzer (trial)"
       }
     },
+    "binary_sensor": {
+      "driver_side_door": {
+        "name": "Driver side door"
+      },
+      "passenger_side_door": {
+        "name": "Passenger side door"
+      },
+      "rear_driver_side_door": {
+        "name": "Rear driver side door"
+      },
+      "rear_passenger_side_door": {
+        "name": "Rear passenger side door"
+      },
+      "driver_side_window": {
+        "name": "Driver side window"
+      },
+      "passenger_side_window": {
+        "name": "Passenger side window"
+      },
+      "rear_driver_side_window": {
+        "name": "Rear driver side window"
+      },
+      "rear_passenger_side_window": {
+        "name": "Rear passenger side window"
+      },
+      "boot": {
+        "name": "Boot"
+      },
+      "bonnet": {
+        "name": "Bonnet"
+      },
+      "moonroof": {
+        "name": "Moonroof"
+      }
+    },
     "lock": {
       "vehicle_lock": {
         "name": "Vehicle lock"
@@ -88,6 +123,18 @@
       },
       "odometer": {
         "name": "Odometer"
+      },
+      "front_left_tire_pressure": {
+        "name": "Front left tyre pressure"
+      },
+      "front_right_tire_pressure": {
+        "name": "Front right tyre pressure"
+      },
+      "rear_left_tire_pressure": {
+        "name": "Rear left tyre pressure"
+      },
+      "rear_right_tire_pressure": {
+        "name": "Rear right tyre pressure"
       }
     }
   }

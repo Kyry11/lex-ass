@@ -9,6 +9,7 @@ NAME = "Lexus Connected AU"
 MANUFACTURER = "Lexus"
 
 PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.LOCK,
     Platform.SENSOR,

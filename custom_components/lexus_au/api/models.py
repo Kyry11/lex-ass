@@ -91,6 +91,14 @@ class LexusAUStatus:
     distance_to_empty_unit: str | None = None
     odometer: float | None = None
     odometer_unit: str | None = None
+    front_left_tire_pressure: float | None = None
+    front_left_tire_pressure_unit: str | None = None
+    front_right_tire_pressure: float | None = None
+    front_right_tire_pressure_unit: str | None = None
+    rear_left_tire_pressure: float | None = None
+    rear_left_tire_pressure_unit: str | None = None
+    rear_right_tire_pressure: float | None = None
+    rear_right_tire_pressure_unit: str | None = None
     last_vehicle_update: datetime | None = None
     engine_running: bool | None = None
     all_doors_locked: bool | None = None
@@ -108,6 +116,22 @@ class LexusAUStatus:
             status_payload, ("distanceToEmpty", "range", "rage")
         )
         odometer, odometer_unit = _extract_numeric(status_payload, ("odometer", "odo"))
+        front_left_tire_pressure, front_left_tire_pressure_unit = _extract_numeric(
+            status_payload,
+            ("flTirePressure", "frontLeftTirePressure", "frontLeftTyrePressure"),
+        )
+        front_right_tire_pressure, front_right_tire_pressure_unit = _extract_numeric(
+            status_payload,
+            ("frTirePressure", "frontRightTirePressure", "frontRightTyrePressure"),
+        )
+        rear_left_tire_pressure, rear_left_tire_pressure_unit = _extract_numeric(
+            status_payload,
+            ("rlTirePressure", "rearLeftTirePressure", "rearLeftTyrePressure"),
+        )
+        rear_right_tire_pressure, rear_right_tire_pressure_unit = _extract_numeric(
+            status_payload,
+            ("rrTirePressure", "rearRightTirePressure", "rearRightTyrePressure"),
+        )
         last_vehicle_update = _extract_timestamp(
             status_payload,
             (
@@ -131,6 +155,14 @@ class LexusAUStatus:
             distance_to_empty_unit=distance_unit,
             odometer=odometer,
             odometer_unit=odometer_unit,
+            front_left_tire_pressure=front_left_tire_pressure,
+            front_left_tire_pressure_unit=front_left_tire_pressure_unit,
+            front_right_tire_pressure=front_right_tire_pressure,
+            front_right_tire_pressure_unit=front_right_tire_pressure_unit,
+            rear_left_tire_pressure=rear_left_tire_pressure,
+            rear_left_tire_pressure_unit=rear_left_tire_pressure_unit,
+            rear_right_tire_pressure=rear_right_tire_pressure,
+            rear_right_tire_pressure_unit=rear_right_tire_pressure_unit,
             last_vehicle_update=last_vehicle_update,
             engine_running=_extract_engine_state(status_payload),
             all_doors_locked=all_doors_locked,
@@ -255,11 +287,18 @@ def _extract_engine_state(payload: dict[str, Any]) -> bool | None:
 
 _CATEGORY_SECTION_TO_KEY = {
     ("Driver Side", "Door"): "driver_side_door",
+    ("Driver Side", "Window"): "driver_side_window",
     ("Passenger Side", "Door"): "passenger_side_door",
+    ("Passenger Side", "Window"): "passenger_side_window",
     ("Driver Side", "Rear Door"): "rear_driver_side_door",
+    ("Driver Side", "Rear Window"): "rear_driver_side_window",
     ("Passenger Side", "Rear Door"): "rear_passenger_side_door",
+    ("Passenger Side", "Rear Window"): "rear_passenger_side_window",
     ("Other", "Hatch"): "hatch",
     ("Other", "Trunk"): "trunk",
+    ("Other", "Bonnet"): "bonnet",
+    ("Other", "Hood"): "bonnet",
+    ("Other", "Moonroof"): "moonroof",
 }
 
 
