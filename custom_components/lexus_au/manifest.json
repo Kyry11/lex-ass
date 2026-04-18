@@ -2,13 +2,13 @@
   "domain": "lexus_au",
   "name": "Lexus Connected AU",
   "codeowners": [
-    "@OWNER"
+    "@Kyry11"
   ],
   "config_flow": true,
-  "documentation": "https://github.com/OWNER/REPO#readme",
+  "documentation": "https://github.com/Kyry11/lex-ass#readme",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/OWNER/REPO/issues",
+  "issue_tracker": "https://github.com/Kyry11/lex-ass/issues",
   "single_config_entry": false,
   "version": "0.1.0"
 }
