@@ -48,6 +48,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: LexusAUConfigEntry) -> 
     """Unload a Lexus Connected AU config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     coordinator: LexusAUCoordinator = hass.data[DOMAIN].pop(entry.entry_id)
+    await coordinator.async_shutdown()
     await coordinator.client.async_close()
 
     if not hass.data[DOMAIN]:
