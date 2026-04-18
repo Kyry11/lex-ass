@@ -355,7 +355,6 @@ def _extract_door_states(payload: dict[str, Any]) -> dict[str, LexusAUDoorState]
 
             if closed is not None or locked is not None:
                 door_states[mapped_key] = LexusAUDoorState(closed=closed, locked=locked)
-                break
 
     return door_states
 
