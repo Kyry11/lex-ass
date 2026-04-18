@@ -41,6 +41,12 @@ COMMAND_ENGINE_START = "engine-start"
 COMMAND_ENGINE_STOP = "engine-stop"
 COMMAND_HAZARD_ON = "hazard-on"
 COMMAND_HAZARD_OFF = "hazard-off"
+COMMAND_TRUNK_LOCK = "trunk-lock"
+COMMAND_TRUNK_UNLOCK = "trunk-unlock"
+COMMAND_HEADLIGHT_ON = "headlight-on"
+COMMAND_HEADLIGHT_OFF = "headlight-off"
+COMMAND_SOUND_HORN = "sound-horn"
+COMMAND_BUZZER_WARNING = "buzzer-warning"
 
 # AU has already proven to use modern command strings with old-style numeric direction values.
 COMMAND_VALUE_ON = 1

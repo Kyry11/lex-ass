@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONF_ENABLE_EXPERIMENTAL_ENGINE_COMMANDS, DOMAIN
+from .const import DOMAIN
 from .coordinator import LexusAUCoordinator
 from .entity import LexusAUEntity
 
@@ -47,9 +47,6 @@ BUTTONS: tuple[LexusAUButtonDescription, ...] = (
         icon="mdi:car-light-alert",
         method_name="async_flash_hazards",
     ),
-)
-
-EXPERIMENTAL_ENGINE_BUTTONS: tuple[LexusAUButtonDescription, ...] = (
     LexusAUButtonDescription(
         key="engine_start",
         translation_key="engine_start",
@@ -62,6 +59,36 @@ EXPERIMENTAL_ENGINE_BUTTONS: tuple[LexusAUButtonDescription, ...] = (
         icon="mdi:engine-off-outline",
         method_name="async_engine_stop",
     ),
+    LexusAUButtonDescription(
+        key="lock_boot_trial",
+        translation_key="lock_boot_trial",
+        icon="mdi:car-back",
+        method_name="async_lock_boot_trial",
+    ),
+    LexusAUButtonDescription(
+        key="unlock_boot_trial",
+        translation_key="unlock_boot_trial",
+        icon="mdi:car-back",
+        method_name="async_unlock_boot_trial",
+    ),
+    LexusAUButtonDescription(
+        key="flash_headlights_trial",
+        translation_key="flash_headlights_trial",
+        icon="mdi:car-light-high",
+        method_name="async_flash_headlights_trial",
+    ),
+    LexusAUButtonDescription(
+        key="sound_horn_trial",
+        translation_key="sound_horn_trial",
+        icon="mdi:bullhorn",
+        method_name="async_sound_horn_trial",
+    ),
+    LexusAUButtonDescription(
+        key="buzzer_warning_trial",
+        translation_key="buzzer_warning_trial",
+        icon="mdi:volume-high",
+        method_name="async_buzzer_warning_trial",
+    ),
 )
 
 
@@ -72,11 +99,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up button entities from a config entry."""
     coordinator: LexusAUCoordinator = hass.data[DOMAIN][entry.entry_id]
-    descriptions = list(BUTTONS)
-    if entry.options.get(CONF_ENABLE_EXPERIMENTAL_ENGINE_COMMANDS, False):
-        descriptions.extend(EXPERIMENTAL_ENGINE_BUTTONS)
-
-    async_add_entities(LexusAUButton(coordinator, description) for description in descriptions)
+    async_add_entities(LexusAUButton(coordinator, description) for description in BUTTONS)
 
 
 class LexusAUButton(LexusAUEntity, ButtonEntity):

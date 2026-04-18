@@ -29,7 +29,6 @@
         "title": "Lexus Connected AU options",
         "data": {
           "refresh_interval_seconds": "Refresh interval (seconds)",
-          "enable_experimental_engine_commands": "Enable experimental engine start/stop buttons",
           "lexus_api_key": "API key override",
           "lexus_x_api_key": "X-API key override"
         }
@@ -55,6 +54,21 @@
       },
       "engine_stop": {
         "name": "Engine stop"
+      },
+      "lock_boot_trial": {
+        "name": "Lock boot (trial)"
+      },
+      "unlock_boot_trial": {
+        "name": "Unlock boot (trial)"
+      },
+      "flash_headlights_trial": {
+        "name": "Headlights (trial)"
+      },
+      "sound_horn_trial": {
+        "name": "Horn (trial)"
+      },
+      "buzzer_warning_trial": {
+        "name": "Buzzer (trial)"
       }
     },
     "lock": {

@@ -14,7 +14,6 @@ from .api import LexusAUAuthError, LexusAUClient, LexusAURequestError
 from .api.client import generate_device_id
 from .const import (
     CONF_DEVICE_ID,
-    CONF_ENABLE_EXPERIMENTAL_ENGINE_COMMANDS,
     CONF_LEXUS_API_KEY,
     CONF_LEXUS_X_API_KEY,
     CONF_REFRESH_INTERVAL_SECONDS,
@@ -84,7 +83,6 @@ class LexusAUConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         },
                         options={
                             CONF_REFRESH_INTERVAL_SECONDS: DEFAULT_REFRESH_INTERVAL_SECONDS,
-                            CONF_ENABLE_EXPERIMENTAL_ENGINE_COMMANDS: False,
                         },
                     )
 
@@ -161,13 +159,6 @@ class LexusAUOptionsFlow(config_entries.OptionsFlow):
                     vol.Coerce(int),
                     vol.Range(min=MIN_REFRESH_INTERVAL_SECONDS),
                 ),
-                vol.Required(
-                    CONF_ENABLE_EXPERIMENTAL_ENGINE_COMMANDS,
-                    default=self._config_entry.options.get(
-                        CONF_ENABLE_EXPERIMENTAL_ENGINE_COMMANDS,
-                        False,
-                    ),
-                ): bool,
                 vol.Required(
                     CONF_LEXUS_API_KEY,
                     default=self._config_entry.options.get(

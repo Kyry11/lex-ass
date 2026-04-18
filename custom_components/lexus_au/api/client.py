@@ -25,12 +25,18 @@ from .const import (
     BRAND,
     CHANNEL,
     CLIENT_ID,
+    COMMAND_BUZZER_WARNING,
     COMMAND_DOOR_LOCK,
     COMMAND_DOOR_UNLOCK,
     COMMAND_ENGINE_START,
     COMMAND_ENGINE_STOP,
     COMMAND_HAZARD_OFF,
     COMMAND_HAZARD_ON,
+    COMMAND_HEADLIGHT_OFF,
+    COMMAND_HEADLIGHT_ON,
+    COMMAND_SOUND_HORN,
+    COMMAND_TRUNK_LOCK,
+    COMMAND_TRUNK_UNLOCK,
     COMMAND_VALUE_OFF,
     COMMAND_VALUE_ON,
     DEVICE_MODEL,
@@ -58,6 +64,7 @@ LOGGER = logging.getLogger(__name__)
 
 _PKCE_CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"
 _TRIAL_HAZARD_FLASH_DURATION_SECONDS = 1.0
+_TRIAL_HEADLIGHT_FLASH_DURATION_SECONDS = 1.0
 
 
 class LexusAUClient:
@@ -186,6 +193,20 @@ class LexusAUClient:
             COMMAND_ENGINE_STOP, value=COMMAND_VALUE_OFF
         )
 
+    async def async_lock_boot_trial(self) -> dict[str, Any]:
+        """Trial boot lock using the EU command name with AU-style direction values."""
+        return await self.async_send_remote_command(
+            COMMAND_TRUNK_LOCK,
+            value=COMMAND_VALUE_ON,
+        )
+
+    async def async_unlock_boot_trial(self) -> dict[str, Any]:
+        """Trial boot unlock using the EU command name with AU-style direction values."""
+        return await self.async_send_remote_command(
+            COMMAND_TRUNK_UNLOCK,
+            value=COMMAND_VALUE_OFF,
+        )
+
     async def async_hazard_on_inferred(self) -> dict[str, Any]:
         """Send an inferred hazards-on command.
 
@@ -203,22 +224,40 @@ class LexusAUClient:
 
     async def async_flash_hazards(self) -> dict[str, Any]:
         """Flash hazards using the confirmed AU/EU-style command pattern."""
-        return await self._async_flash_hazards(
+        return await self._async_momentary_command_sequence(
             on_command=COMMAND_HAZARD_ON,
             off_command=COMMAND_HAZARD_OFF,
+            duration_seconds=_TRIAL_HAZARD_FLASH_DURATION_SECONDS,
         )
 
-    async def _async_flash_hazards(
+    async def async_flash_headlights_trial(self) -> dict[str, Any]:
+        """Trial headlight flash using the EU modern OneApp command pattern."""
+        return await self._async_momentary_command_sequence(
+            on_command=COMMAND_HEADLIGHT_ON,
+            off_command=COMMAND_HEADLIGHT_OFF,
+            duration_seconds=_TRIAL_HEADLIGHT_FLASH_DURATION_SECONDS,
+        )
+
+    async def async_sound_horn_trial(self) -> dict[str, Any]:
+        """Trial horn command using the EU modern OneApp command pattern."""
+        return await self.async_send_remote_command(COMMAND_SOUND_HORN)
+
+    async def async_buzzer_warning_trial(self) -> dict[str, Any]:
+        """Trial buzzer command using the EU modern OneApp command pattern."""
+        return await self.async_send_remote_command(COMMAND_BUZZER_WARNING)
+
+    async def _async_momentary_command_sequence(
         self,
         *,
         on_command: str,
         off_command: str,
         on_value: int | None = None,
         off_value: int | None = None,
+        duration_seconds: float,
     ) -> dict[str, Any]:
-        """Send a short on/off hazard sequence."""
+        """Send a short on/off command sequence for momentary actions."""
         on_response = await self.async_send_remote_command(on_command, value=on_value)
-        await asyncio.sleep(_TRIAL_HAZARD_FLASH_DURATION_SECONDS)
+        await asyncio.sleep(duration_seconds)
         off_response = await self.async_send_remote_command(
             off_command,
             value=off_value,

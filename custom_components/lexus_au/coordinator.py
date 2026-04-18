@@ -105,10 +105,38 @@ class LexusAUCoordinator(DataUpdateCoordinator[LexusAUSnapshot]):
             predicate=lambda snapshot: snapshot.status.engine_running is False,
         )
 
+    async def async_lock_boot_trial(self) -> None:
+        """Trial boot lock using the inferred AU command pattern."""
+        await self.client.async_lock_boot_trial()
+        await self._async_begin_command_confirmation(
+            command_name="boot lock",
+            predicate=_snapshot_is_boot_locked,
+        )
+
+    async def async_unlock_boot_trial(self) -> None:
+        """Trial boot unlock using the inferred AU command pattern."""
+        await self.client.async_unlock_boot_trial()
+        await self._async_begin_command_confirmation(
+            command_name="boot unlock",
+            predicate=_snapshot_is_boot_unlocked,
+        )
+
     async def async_flash_hazards(self) -> None:
         """Flash hazards using the confirmed command sequence."""
         await self.client.async_flash_hazards()
         await self.async_refresh_vehicle()
+
+    async def async_flash_headlights_trial(self) -> None:
+        """Trial the headlight flash command."""
+        await self.client.async_flash_headlights_trial()
+
+    async def async_sound_horn_trial(self) -> None:
+        """Trial the horn command."""
+        await self.client.async_sound_horn_trial()
+
+    async def async_buzzer_warning_trial(self) -> None:
+        """Trial the buzzer command."""
+        await self.client.async_buzzer_warning_trial()
 
     async def _async_request_remote_refresh(self) -> None:
         """Request that the vehicle upload fresh state."""
@@ -197,3 +225,21 @@ def _snapshot_is_unlocked(snapshot: LexusAUSnapshot) -> bool:
     if status.all_doors_locked is not None:
         return status.all_doors_locked is False
     return status.driver_door_locked is False
+
+
+def _snapshot_is_boot_locked(snapshot: LexusAUSnapshot) -> bool:
+    """Return true when the current snapshot shows the hatch or trunk locked."""
+    for key in ("hatch", "trunk"):
+        opening_state = snapshot.status.door_states.get(key)
+        if opening_state and opening_state.locked is not None:
+            return opening_state.locked is True
+    return False
+
+
+def _snapshot_is_boot_unlocked(snapshot: LexusAUSnapshot) -> bool:
+    """Return true when the current snapshot shows the hatch or trunk unlocked."""
+    for key in ("hatch", "trunk"):
+        opening_state = snapshot.status.door_states.get(key)
+        if opening_state and opening_state.locked is not None:
+            return opening_state.locked is False
+    return False
