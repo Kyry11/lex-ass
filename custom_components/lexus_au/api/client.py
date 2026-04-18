@@ -125,11 +125,7 @@ class LexusAUClient:
         """Fetch the current vehicle snapshot for Home Assistant."""
         status = await self.async_get_remote_status()
 
-        if self._vehicle_overview.raw == {}:
-            try:
-                self._vehicle_overview = await self.async_get_vehicle_overview()
-            except LexusAURequestError:
-                LOGGER.debug("Vehicle overview request failed; falling back to VIN only")
+        await self._async_ensure_vehicle_overview()
 
         return LexusAUSnapshot(vehicle=self._vehicle_overview, status=status)
 
@@ -156,6 +152,15 @@ class LexusAUClient:
         if telemetry_payload is not None:
             payload = _merge_payload_sections(payload, telemetry_payload)
         return LexusAUStatus.from_payload(payload)
+
+    async def _async_ensure_vehicle_overview(self) -> None:
+        """Ensure vehicle overview metadata is loaded when available."""
+        if self._vehicle_overview.raw != {}:
+            return
+        try:
+            self._vehicle_overview = await self.async_get_vehicle_overview()
+        except LexusAURequestError:
+            LOGGER.debug("Vehicle overview request failed; falling back to VIN only")
 
     async def async_refresh_remote_status(self) -> dict[str, Any]:
         """Ask the vehicle to upload fresh state."""
@@ -291,6 +296,9 @@ class LexusAUClient:
         if self._telemetry_path is None:
             return None
 
+        await self._async_ensure_vehicle_overview()
+        telemetry_headers = self._telemetry_headers()
+
         candidate_paths: list[str]
         if isinstance(self._telemetry_path, str):
             candidate_paths = [self._telemetry_path]
@@ -303,6 +311,7 @@ class LexusAUClient:
                     "GET",
                     path,
                     include_vin_header=True,
+                    extra_headers=telemetry_headers,
                 )
             except LexusAURequestError as err:
                 LOGGER.debug("Telemetry request %s failed: %s", path, err)
@@ -314,6 +323,17 @@ class LexusAUClient:
         self._telemetry_path = None
         LOGGER.debug("No supported telemetry endpoint found for this AU backend")
         return None
+
+    def _telemetry_headers(self) -> dict[str, str]:
+        """Build extra headers commonly required by telemetry endpoints."""
+        headers = {"VIN": self._vin}
+        region = self._vehicle_overview.raw.get("region")
+        generation = self._vehicle_overview.raw.get("generation")
+        if isinstance(region, str) and region:
+            headers["x-region"] = region
+        if isinstance(generation, str) and generation:
+            headers["GENERATION"] = generation
+        return headers
 
     async def async_login(self, *, force: bool = False) -> None:
         """Authenticate and ensure device registration."""
@@ -471,6 +491,7 @@ class LexusAUClient:
         path: str,
         *,
         include_vin_header: bool = False,
+        extra_headers: dict[str, str] | None = None,
         json_body: dict[str, Any] | None = None,
         retry_on_auth_failure: bool = True,
     ) -> dict[str, Any]:
@@ -478,6 +499,8 @@ class LexusAUClient:
         await self.async_login()
 
         headers = self._api_headers(include_vin_header=include_vin_header)
+        if extra_headers:
+            headers.update(extra_headers)
         response = await self._http.request(
             method,
             f"{API_BASE_URL}{path}",
@@ -492,6 +515,7 @@ class LexusAUClient:
                 method,
                 path,
                 include_vin_header=include_vin_header,
+                extra_headers=extra_headers,
                 json_body=json_body,
                 retry_on_auth_failure=False,
             )
