@@ -41,6 +41,12 @@
       "refresh_vehicle": {
         "name": "Refresh vehicle"
       },
+      "lock_doors": {
+        "name": "Lock doors"
+      },
+      "unlock_doors": {
+        "name": "Unlock doors"
+      },
       "engine_start": {
         "name": "Engine start"
       },

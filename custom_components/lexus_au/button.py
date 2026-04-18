@@ -29,6 +29,18 @@ BUTTONS: tuple[LexusAUButtonDescription, ...] = (
         icon="mdi:refresh",
         method_name="async_refresh_vehicle",
     ),
+    LexusAUButtonDescription(
+        key="lock_doors",
+        translation_key="lock_doors",
+        icon="mdi:lock",
+        method_name="async_lock_doors",
+    ),
+    LexusAUButtonDescription(
+        key="unlock_doors",
+        translation_key="unlock_doors",
+        icon="mdi:lock-open-variant",
+        method_name="async_unlock_doors",
+    ),
 )
 
 EXPERIMENTAL_ENGINE_BUTTONS: tuple[LexusAUButtonDescription, ...] = (
