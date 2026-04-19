@@ -1,21 +1,25 @@
-```text
-             .-=================-.
-          .-'                     '-.
-        .'                           '.
-       /      .-""""-.                 \
-      ;      /  .--.  \                 ;
-      |      | |    \  |                |
-      |      | |     | |                |
-      |      | |   _/ /                 |
-      ;      \  '--'  /                 ;
-       \       '-.__.-'                /
-        '.                           .'
-          '-.                   .-'
-             '-================-'
-                     LEXUS
-```
+# Lexus AU integration for Home Assistant
 
-# Lexus Connected AU for Home Assistant
+```text
+```````````````````############```````````````````
+`````````````#########````#########`##````````````
+`````````######```````````########``######````````
+``````#####`````````````########````````####``````
+````#####`````````````#########```````````####````
+```####``````````````########```````````````####``
+``####`````````````#########`````````````````####`
+`####`````````````########````````````````````###`
+#####```````````#########`````````````````````####
+####```````````########```````````````````````####
+`####`````````########````````````````````````####
+`####`````````########```````````````````````####`
+``####````````##################################``
+```####`````````###############################```
+`````####`````````````````````````````````###`````
+```````#####``````````````````````````######``````
+``````````#######```````````````########``````````
+```````````````###################````````````````
+```
 
 <p align="center">
   <img src="https://toyota-cms-media.s3.amazonaws.com/wp-content/uploads/2024/09/Lexus_Logo.jpg" alt="Lexus logo" height="36" />
@@ -24,7 +28,7 @@
 </p>
 
 <p align="center">
-  <strong>Less app tapping. More automations.</strong>
+  <strong>Lexus app is clunky, has promotional context and is slow to log into. Home Assistant is super flexible.</strong>
 </p>
 
 <p align="center">
@@ -34,7 +38,7 @@
   <img src="https://img.shields.io/badge/IoT%20Class-cloud_polling-1f6feb?style=for-the-badge" alt="Cloud polling" />
 </p>
 
-This repository provides a Home Assistant custom integration for the Lexus Connected Australia backend. It turns supported Lexus cloud features into native Home Assistant entities so you can use your vehicle in dashboards, scenes, scripts, notifications, HomeKit bridges, automations, and history views such as tracking tire pressure over time.
+This repository provides a Home Assistant custom integration for the Lexus Connected Australia service. It turns supported Lexus cloud features into native Home Assistant entities so you can use your vehicle in dashboards, scenes, scripts, notifications, HomeKit bridges, automations, and history views such as tracking state changes over time.
 
 > [!IMPORTANT]
 > This integration targets the Lexus Connected Australia platform. Other Lexus or Toyota regions use different auth flows and backend contracts and are not expected to work unchanged.
