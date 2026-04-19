@@ -1,48 +1,127 @@
-# Lexus Home Assistant Project
+```text
+ _      _____ __   __ _   _  ____  
+| |    | ____|\ \ / /| | | |/ ___| 
+| |    |  _|   \ V / | | | |\___ \ 
+| |___ | |___   | |  | |_| | ___) |
+|_____||_____|  |_|   \___/ |____/ 
+```
 
-Research date: 2026-04-17
+# Lexus Connected AU for Home Assistant
 
-Current recommendation: build a private Home Assistant custom integration for Lexus Connected Australia by reverse-engineering the Lexus Connected app/API and reusing patterns from the existing Toyota EU and Toyota NA community integrations.
+<p align="center">
+  <img src="https://toyota-cms-media.s3.amazonaws.com/wp-content/uploads/2024/09/Lexus_Logo.jpg" alt="Lexus logo" height="36" />
+  &nbsp;&nbsp;&nbsp;
+  <img src="https://cdn.simpleicons.org/homeassistant/41BDF5" alt="Home Assistant logo" height="44" />
+</p>
 
-This repository contains a Home Assistant custom integration under [custom_components/lexus_au](/Users/kyryll/Repos/Lexus/custom_components/lexus_au).
+<p align="center">
+  <strong>Less app tapping. More automations.</strong>
+</p>
 
-Docs:
+<p align="center">
+  <a href="https://github.com/Kyry11/lex-ass"><img src="https://img.shields.io/badge/GitHub-Kyry11%2Flex--ass-181717?style=for-the-badge&logo=github" alt="GitHub repository" /></a>
+  <a href="https://hacs.xyz/"><img src="https://img.shields.io/badge/HACS-Custom%20Repository-41BDF5?style=for-the-badge&logo=homeassistant&logoColor=white" alt="HACS custom repository" /></a>
+  <img src="https://img.shields.io/badge/Region-Australia-0A84FF?style=for-the-badge" alt="Australia region" />
+  <img src="https://img.shields.io/badge/IoT%20Class-cloud_polling-1f6feb?style=for-the-badge" alt="Cloud polling" />
+</p>
 
-- [Project Overview](docs/project-overview.md)
-- [Solution Spec](docs/solution-spec.md)
-- [Implementation Plan](docs/implementation-plan.md)
-- [Protocol Findings (2026-04-18)](docs/protocol-findings-2026-04-18.md)
-- [Cross-Region Command Comparison (2026-04-18)](docs/cross-region-command-comparison-2026-04-18.md)
-- [Implementation Status (2026-04-18)](docs/implementation-status-2026-04-18.md)
-- [GitHub Publishing Checklist](docs/github-publishing-checklist.md)
+This repository provides a Home Assistant custom integration for the Lexus Connected Australia backend. It turns supported Lexus cloud features into native Home Assistant entities so you can use your vehicle in dashboards, scenes, scripts, notifications, HomeKit bridges, automations, and history views such as tracking tire pressure over time.
 
-## Install
+> [!IMPORTANT]
+> This integration targets the Lexus Connected Australia platform. Other Lexus or Toyota regions use different auth flows and backend contracts and are not expected to work unchanged.
 
-### Manual
+```mermaid
+flowchart LR
+    Car["Lexus vehicle"] <--> Cloud["Lexus Connected AU cloud"]
+    Cloud <--> Integration["Lexus Connected AU integration"]
+    Integration --> Entities["Lock, buttons, sensors, binary sensors"]
+    Entities --> HA["Home Assistant"]
+    HA --> Dash["Dashboards and notifications"]
+    HA --> Auto["Automations and scripts"]
+    HA --> HK["HomeKit bridge"]
+```
 
-Copy [custom_components/lexus_au](/Users/kyryll/Repos/Lexus/custom_components/lexus_au) into your Home Assistant config directory under:
+## What this repo does
+
+- Adds a Lexus Connected AU integration to Home Assistant through `custom_components/lexus_au`.
+- Exposes remote actions for day-to-day convenience, not just raw API experiments.
+- Surfaces live vehicle state for dashboards and automations.
+- Makes vehicle data part of normal Home Assistant history, so trends like tire pressure drift over time become visible.
+- Uses fast command confirmation polling after actions, with jittered background polling and exponential backoff for regular refreshes.
+
+## What you can do with it
+
+| Area | Available in the integration |
+| --- | --- |
+| Remote control | Refresh vehicle, lock doors, unlock doors, flash hazards, engine start, engine stop |
+| Trial actions | Lock boot, unlock boot, flash headlights, sound horn, buzzer warning |
+| Core status | Fuel level, distance to empty, odometer, last vehicle update |
+| Vehicle openings | Front doors, rear doors, front windows, rear windows, boot, bonnet, moonroof |
+| Tire data | Front left, front right, rear left, and rear right tire pressure |
+| Automation fit | Native Home Assistant entities for dashboards, scripts, scenes, notifications, and HomeKit export |
+
+## Automation ideas
+
+- Lock the car automatically when the house switches to night mode.
+- Raise a notification if the boot, bonnet, or moonroof is still open after everyone leaves.
+- Surface tire pressure and odometer on a vehicle dashboard card.
+- Track tire pressure over time and spot a slow leak before it becomes an annoying surprise.
+- Flash hazards from a dashboard tile to find the car in a crowded car park.
+- Export explicit `Lock doors` and `Unlock doors` buttons through Home Assistant to HomeKit.
+- Build a morning scene that puts vehicle status next to weather, driveway presence, and charging information.
+
+## Install with HACS
+
+HACS is the recommended path.
+
+1. Open HACS in Home Assistant.
+2. Go to `Integrations`.
+3. Open the menu in the top-right corner, then choose `Custom repositories`.
+4. Add `https://github.com/Kyry11/lex-ass` as a repository of type `Integration`.
+5. Install `Lexus Connected AU`.
+6. Restart Home Assistant.
+7. Go to `Settings -> Devices & Services -> Add Integration`.
+8. Search for `Lexus Connected AU`.
+9. Enter your Lexus account email, password, VIN, `API key`, and `X-API key`.
+
+After setup, start with:
+
+1. `Refresh vehicle`
+2. `Lock doors`
+3. `Unlock doors`
+4. `Flash hazards`
+5. Sensor and binary sensor checks on your Lexus device page
+
+## Manual install
+
+If you prefer not to use HACS, copy `custom_components/lexus_au` into your Home Assistant config directory under:
 
 ```text
 custom_components/lexus_au
 ```
 
-Restart Home Assistant, then add `Lexus Connected AU` from `Settings -> Devices & Services`.
+Then restart Home Assistant and add `Lexus Connected AU` from `Settings -> Devices & Services`.
 
-### HACS custom repository
+## What you need
 
-This repo is structured for HACS, but before publishing you must replace the placeholder GitHub values in [custom_components/lexus_au/manifest.json](/Users/kyryll/Repos/Lexus/custom_components/lexus_au/manifest.json). See [GitHub Publishing Checklist](docs/github-publishing-checklist.md).
+- Home Assistant
+- A Lexus vehicle/account with the relevant connected services enabled
+- Your VIN
+- Working Lexus app API credentials for the `API key` and `X-API key` fields
 
-Why this path:
+This repository intentionally does not publish certain app-level secrets or keys. If you want full remote functionality, you will likely need to obtain the required values from your own environment and research workflow.
 
-- It is the only route that can give you native Home Assistant entities and services without adding a new paid middleware layer.
-- Existing Toyota/Lexus community work proves the general approach is feasible, but the public integrations I found are region-specific and do not directly target the Australian Lexus Connected backend.
-- Lexus Australia officially exposes the same remote capabilities you want in the mobile app, so the missing piece is the integration layer rather than vehicle capability.
+## Notes for contributors
 
-Confirmed environment:
+- Stable user-facing features should feel like normal Home Assistant entities, not debugging hooks.
+- AU-specific findings, protocol notes, and implementation history live in [`docs/`](docs/).
+- If you can confirm or refine the current trial actions on additional Lexus AU models, issues and pull requests are useful.
 
-- daily phone: iPhone
-- interception host: Apple Silicon Mac running the iOS Lexus app
-- Home Assistant target: HA OS
-- V1 command priority: `lock/unlock`, `engine start/stop`, `hazard flash`
+## Legal and safety
 
-Immediate next step: start the API-capture sprint from the Mac-hosted iOS app, with Android emulator work kept as a fallback if the Mac path proves harder than expected.
+- This is an unofficial community project. It is not affiliated with, endorsed by, or supported by Lexus, Toyota Motor Corporation, Toyota Connected, Home Assistant, Nabu Casa, the Open Home Foundation, or their affiliates.
+- Lexus names, marks, connected-service software, and related intellectual property belong to their respective owners.
+- Home Assistant names, marks, software, and related intellectual property belong to their respective owners.
+- The Lexus and Home Assistant logos shown in this README are displayed for identification only. The rendered SVG marks are served via Simple Icons as convenience artwork; all underlying trademarks remain the property of their respective owners.
+- This integration can send real commands to a real vehicle. Use it carefully, test new automations in a safe environment, and assume remote-service behavior may change without notice.
+- This repository is provided as-is, without warranty of any kind, and the maintainers accept no liability for vehicle behavior, service changes, account issues, or third-party intellectual-property claims arising from use of this project.
