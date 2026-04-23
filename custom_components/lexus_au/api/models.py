@@ -85,12 +85,20 @@ class LexusAUStatus:
     fetched_at: datetime
     latitude: float | None = None
     longitude: float | None = None
+    location_display_name: str | None = None
+    location_updated_at: datetime | None = None
     fuel_level: float | None = None
     fuel_level_unit: str | None = None
     distance_to_empty: float | None = None
     distance_to_empty_unit: str | None = None
     odometer: float | None = None
     odometer_unit: str | None = None
+    trip_a: float | None = None
+    trip_a_unit: str | None = None
+    trip_b: float | None = None
+    trip_b_unit: str | None = None
+    speed: float | None = None
+    speed_unit: str | None = None
     front_left_tire_pressure: float | None = None
     front_left_tire_pressure_unit: str | None = None
     front_right_tire_pressure: float | None = None
@@ -99,7 +107,11 @@ class LexusAUStatus:
     rear_left_tire_pressure_unit: str | None = None
     rear_right_tire_pressure: float | None = None
     rear_right_tire_pressure_unit: str | None = None
+    spare_tire_pressure: float | None = None
+    spare_tire_pressure_unit: str | None = None
+    tire_pressure_updated_at: datetime | None = None
     last_vehicle_update: datetime | None = None
+    caution_count: int | None = None
     engine_running: bool | None = None
     all_doors_locked: bool | None = None
     driver_door_locked: bool | None = None
@@ -111,11 +123,19 @@ class LexusAUStatus:
         """Create a normalized status object from an AU API payload."""
         status_payload = _status_payload(payload)
         latitude, longitude = _extract_location(status_payload)
+        location_display_name = _extract_location_display_name(status_payload)
+        location_updated_at = _extract_timestamp(
+            status_payload,
+            ("locationAcquisitionDatetime", "lastTimestamp"),
+        )
         fuel_level, fuel_unit = _extract_numeric(status_payload, ("fuelLevel", "fugage"))
         distance_to_empty, distance_unit = _extract_numeric(
             status_payload, ("distanceToEmpty", "range", "rage")
         )
         odometer, odometer_unit = _extract_numeric(status_payload, ("odometer", "odo"))
+        trip_a, trip_a_unit = _extract_trip_distance(status_payload, "Trip A")
+        trip_b, trip_b_unit = _extract_trip_distance(status_payload, "Trip B")
+        speed, speed_unit = _extract_numeric(status_payload, ("speed", "vehicleSpeed"))
         front_left_tire_pressure, front_left_tire_pressure_unit = _extract_numeric(
             status_payload,
             ("flTirePressure", "frontLeftTirePressure", "frontLeftTyrePressure"),
@@ -131,6 +151,14 @@ class LexusAUStatus:
         rear_right_tire_pressure, rear_right_tire_pressure_unit = _extract_numeric(
             status_payload,
             ("rrTirePressure", "rearRightTirePressure", "rearRightTyrePressure"),
+        )
+        spare_tire_pressure, spare_tire_pressure_unit = _extract_numeric(
+            status_payload,
+            ("spareTirePressure", "spareTyrePressure"),
+        )
+        tire_pressure_updated_at = _extract_timestamp(
+            status_payload,
+            ("tirePressureTimestamp", "tyrePressureTimestamp"),
         )
         last_vehicle_update = _extract_timestamp(
             status_payload,
@@ -149,12 +177,20 @@ class LexusAUStatus:
             fetched_at=datetime.now(UTC),
             latitude=latitude,
             longitude=longitude,
+            location_display_name=location_display_name,
+            location_updated_at=location_updated_at,
             fuel_level=fuel_level,
             fuel_level_unit=fuel_unit,
             distance_to_empty=distance_to_empty,
             distance_to_empty_unit=distance_unit,
             odometer=odometer,
             odometer_unit=odometer_unit,
+            trip_a=trip_a,
+            trip_a_unit=trip_a_unit,
+            trip_b=trip_b,
+            trip_b_unit=trip_b_unit,
+            speed=speed,
+            speed_unit=speed_unit,
             front_left_tire_pressure=front_left_tire_pressure,
             front_left_tire_pressure_unit=front_left_tire_pressure_unit,
             front_right_tire_pressure=front_right_tire_pressure,
@@ -163,7 +199,11 @@ class LexusAUStatus:
             rear_left_tire_pressure_unit=rear_left_tire_pressure_unit,
             rear_right_tire_pressure=rear_right_tire_pressure,
             rear_right_tire_pressure_unit=rear_right_tire_pressure_unit,
+            spare_tire_pressure=spare_tire_pressure,
+            spare_tire_pressure_unit=spare_tire_pressure_unit,
+            tire_pressure_updated_at=tire_pressure_updated_at,
             last_vehicle_update=last_vehicle_update,
+            caution_count=_extract_int(status_payload, ("cautionOverallCount",)),
             engine_running=_extract_engine_state(status_payload),
             all_doors_locked=all_doors_locked,
             driver_door_locked=driver_door_locked,
@@ -253,6 +293,17 @@ def _extract_location(payload: dict[str, Any]) -> tuple[float | None, float | No
     return None, None
 
 
+def _extract_location_display_name(payload: dict[str, Any]) -> str | None:
+    for candidate in _collect_objects(payload):
+        display_name = _pick_first_string(
+            candidate,
+            ("displayName", "display_name", "locationName", "location_name"),
+        )
+        if display_name:
+            return display_name
+    return None
+
+
 def _extract_timestamp(
     payload: dict[str, Any], keys: tuple[str, ...]
 ) -> datetime | None:
@@ -271,10 +322,29 @@ def _extract_timestamp(
     return None
 
 
+def _extract_int(payload: dict[str, Any], keys: tuple[str, ...]) -> int | None:
+    for candidate in _collect_objects(payload):
+        for key in keys:
+            raw_value = candidate.get(key)
+            if isinstance(raw_value, bool):
+                continue
+            if isinstance(raw_value, int):
+                return raw_value
+            if isinstance(raw_value, str):
+                try:
+                    return int(raw_value)
+                except ValueError:
+                    continue
+    return None
+
+
 def _extract_engine_state(payload: dict[str, Any]) -> bool | None:
     for candidate in _collect_objects(payload):
         if "running" in candidate and isinstance(candidate["running"], bool):
             return candidate["running"]
+
+        if "value" in candidate:
+            continue
 
         status = candidate.get("status")
         if status in ("1", 1, True):
@@ -283,6 +353,53 @@ def _extract_engine_state(payload: dict[str, Any]) -> bool | None:
             return False
 
     return None
+
+
+def _extract_trip_distance(
+    payload: dict[str, Any],
+    section_name: str,
+) -> tuple[float | None, str | None]:
+    raw_vehicle_status = payload.get("vehicleStatus")
+    if not isinstance(raw_vehicle_status, list):
+        return None, None
+
+    for category in raw_vehicle_status:
+        if not isinstance(category, dict) or category.get("category") != "Trip Details":
+            continue
+
+        sections = category.get("sections")
+        if not isinstance(sections, list):
+            continue
+
+        for section in sections:
+            if not isinstance(section, dict) or section.get("section") != section_name:
+                continue
+
+            values = section.get("values")
+            if not isinstance(values, list) or not values:
+                return None, None
+
+            first_value = values[0].get("value") if isinstance(values[0], dict) else None
+            if isinstance(first_value, (int, float)):
+                return float(first_value), None
+            if isinstance(first_value, str):
+                return _parse_number_with_optional_unit(first_value)
+
+    return None, None
+
+
+def _parse_number_with_optional_unit(value: str) -> tuple[float | None, str | None]:
+    parts = value.strip().split(maxsplit=1)
+    if not parts:
+        return None, None
+
+    try:
+        number = float(parts[0].replace(",", ""))
+    except ValueError:
+        return None, None
+
+    unit = parts[1] if len(parts) > 1 else None
+    return number, unit
 
 
 _CATEGORY_SECTION_TO_KEY = {

@@ -94,6 +94,15 @@ BINARY_SENSORS: tuple[LexusAUBinarySensorDescription, ...] = (
     ),
 )
 
+ENGINE_BINARY_SENSORS: tuple[BinarySensorEntityDescription, ...] = (
+    BinarySensorEntityDescription(
+        key="engine_running",
+        translation_key="engine_running",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        icon="mdi:engine-outline",
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -103,7 +112,16 @@ async def async_setup_entry(
     """Set up Lexus AU binary sensors."""
     coordinator: LexusAUCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        LexusAUBinarySensor(coordinator, description) for description in BINARY_SENSORS
+        [
+            *(
+                LexusAUBinarySensor(coordinator, description)
+                for description in BINARY_SENSORS
+            ),
+            *(
+                LexusAUEngineRunningBinarySensor(coordinator, description)
+                for description in ENGINE_BINARY_SENSORS
+            ),
+        ]
     )
 
 
@@ -131,3 +149,23 @@ class LexusAUBinarySensor(LexusAUEntity, BinarySensorEntity):
                 continue
             return opening_state.closed is False
         return None
+
+
+class LexusAUEngineRunningBinarySensor(LexusAUEntity, BinarySensorEntity):
+    """Binary sensor derived from the current remote engine status."""
+
+    entity_description: BinarySensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: LexusAUCoordinator,
+        description: BinarySensorEntityDescription,
+    ) -> None:
+        """Initialize the binary sensor."""
+        super().__init__(coordinator, description.key)
+        self.entity_description = description
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true when remote engine status reports running."""
+        return self.coordinator.data.status.engine_running

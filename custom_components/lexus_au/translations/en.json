@@ -104,6 +104,14 @@
       },
       "moonroof": {
         "name": "Moonroof"
+      },
+      "engine_running": {
+        "name": "Engine running"
+      }
+    },
+    "device_tracker": {
+      "vehicle_location": {
+        "name": "Vehicle location"
       }
     },
     "lock": {
@@ -115,6 +123,12 @@
       "last_vehicle_update": {
         "name": "Last vehicle update"
       },
+      "last_location_update": {
+        "name": "Last location update"
+      },
+      "location_name": {
+        "name": "Location name"
+      },
       "fuel_level": {
         "name": "Fuel level"
       },
@@ -123,6 +137,18 @@
       },
       "odometer": {
         "name": "Odometer"
+      },
+      "trip_a": {
+        "name": "Trip A"
+      },
+      "trip_b": {
+        "name": "Trip B"
+      },
+      "vehicle_speed": {
+        "name": "Vehicle speed"
+      },
+      "caution_count": {
+        "name": "Caution count"
       },
       "front_left_tire_pressure": {
         "name": "Front left tyre pressure"
@@ -135,6 +161,12 @@
       },
       "rear_right_tire_pressure": {
         "name": "Rear right tyre pressure"
+      },
+      "spare_tire_pressure": {
+        "name": "Spare tyre pressure"
+      },
+      "last_tire_pressure_update": {
+        "name": "Last tyre pressure update"
       }
     }
   }

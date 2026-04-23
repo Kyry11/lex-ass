@@ -36,6 +36,18 @@ SENSORS: tuple[LexusAUSensorDescription, ...] = (
         value_attr="last_vehicle_update",
     ),
     LexusAUSensorDescription(
+        key="last_location_update",
+        translation_key="last_location_update",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_attr="location_updated_at",
+    ),
+    LexusAUSensorDescription(
+        key="location_name",
+        translation_key="location_name",
+        icon="mdi:map-marker",
+        value_attr="location_display_name",
+    ),
+    LexusAUSensorDescription(
         key="fuel_level",
         translation_key="fuel_level",
         icon="mdi:gas-station",
@@ -55,6 +67,33 @@ SENSORS: tuple[LexusAUSensorDescription, ...] = (
         icon="mdi:counter",
         value_attr="odometer",
         unit_attr="odometer_unit",
+    ),
+    LexusAUSensorDescription(
+        key="trip_a",
+        translation_key="trip_a",
+        icon="mdi:map-marker-path",
+        value_attr="trip_a",
+        unit_attr="trip_a_unit",
+    ),
+    LexusAUSensorDescription(
+        key="trip_b",
+        translation_key="trip_b",
+        icon="mdi:map-marker-path",
+        value_attr="trip_b",
+        unit_attr="trip_b_unit",
+    ),
+    LexusAUSensorDescription(
+        key="vehicle_speed",
+        translation_key="vehicle_speed",
+        icon="mdi:speedometer",
+        value_attr="speed",
+        unit_attr="speed_unit",
+    ),
+    LexusAUSensorDescription(
+        key="caution_count",
+        translation_key="caution_count",
+        icon="mdi:alert-circle-outline",
+        value_attr="caution_count",
     ),
     LexusAUSensorDescription(
         key="front_left_tire_pressure",
@@ -87,6 +126,20 @@ SENSORS: tuple[LexusAUSensorDescription, ...] = (
         icon="mdi:car-tire-alert",
         value_attr="rear_right_tire_pressure",
         unit_attr="rear_right_tire_pressure_unit",
+    ),
+    LexusAUSensorDescription(
+        key="spare_tire_pressure",
+        translation_key="spare_tire_pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        icon="mdi:car-tire-alert",
+        value_attr="spare_tire_pressure",
+        unit_attr="spare_tire_pressure_unit",
+    ),
+    LexusAUSensorDescription(
+        key="last_tire_pressure_update",
+        translation_key="last_tire_pressure_update",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_attr="tire_pressure_updated_at",
     ),
 )
 

@@ -50,6 +50,7 @@ from .const import (
     PASSWORD_CHECK_PATH,
     REDIRECT_URI,
     REMOTE_COMMAND_PATH,
+    REMOTE_ENGINE_STATUS_PATH,
     REMOTE_REFRESH_PATH,
     REMOTE_STATUS_PATH,
     TELEMETRY_V2_PATH,
@@ -57,6 +58,7 @@ from .const import (
     TOKEN_BASIC_AUTH,
     USER_AGENT,
     VEHICLE_GUID_PATH,
+    VEHICLE_LOCATION_PATH,
 )
 from .exceptions import LexusAUAuthError, LexusAUProtocolError, LexusAURequestError
 from .models import LexusAUSnapshot, LexusAUStatus, LexusAUToken, LexusAUVehicleOverview
@@ -102,6 +104,8 @@ class LexusAUClient:
         self._device_registered = False
         self._vehicle_overview = LexusAUVehicleOverview(vin=self._vin)
         self._telemetry_path: str | object = _UNSET
+        self._location_supported = True
+        self._engine_status_supported = True
 
     async def async_close(self) -> None:
         """Close underlying HTTP resources."""
@@ -151,6 +155,12 @@ class LexusAUClient:
         telemetry_payload = await self._async_get_telemetry_best_effort()
         if telemetry_payload is not None:
             payload = _merge_payload_sections(payload, telemetry_payload)
+        location_payload = await self._async_get_location_best_effort()
+        if location_payload is not None:
+            payload = _merge_payload_sections(payload, location_payload)
+        engine_status_payload = await self._async_get_engine_status_best_effort()
+        if engine_status_payload is not None:
+            payload = _merge_payload_sections(payload, engine_status_payload)
         return LexusAUStatus.from_payload(payload)
 
     async def _async_ensure_vehicle_overview(self) -> None:
@@ -297,7 +307,7 @@ class LexusAUClient:
             return None
 
         await self._async_ensure_vehicle_overview()
-        telemetry_headers = self._telemetry_headers()
+        telemetry_headers = self._vehicle_metadata_headers()
 
         candidate_paths: list[str]
         if isinstance(self._telemetry_path, str):
@@ -324,8 +334,48 @@ class LexusAUClient:
         LOGGER.debug("No supported telemetry endpoint found for this AU backend")
         return None
 
-    def _telemetry_headers(self) -> dict[str, str]:
-        """Build extra headers commonly required by telemetry endpoints."""
+    async def _async_get_location_best_effort(self) -> dict[str, Any] | None:
+        """Fetch a dedicated last-known location payload when AU supports it."""
+        if not self._location_supported:
+            return None
+
+        await self._async_ensure_vehicle_overview()
+        try:
+            return await self._async_api_request(
+                "GET",
+                VEHICLE_LOCATION_PATH,
+                include_vin_header=True,
+                extra_headers=self._vehicle_metadata_headers(),
+            )
+        except LexusAURequestError as err:
+            self._location_supported = False
+            LOGGER.debug("Location request %s failed: %s", VEHICLE_LOCATION_PATH, err)
+            return None
+
+    async def _async_get_engine_status_best_effort(self) -> dict[str, Any] | None:
+        """Fetch engine-running status when AU supports the cross-region endpoint."""
+        if not self._engine_status_supported:
+            return None
+
+        await self._async_ensure_vehicle_overview()
+        try:
+            return await self._async_api_request(
+                "GET",
+                REMOTE_ENGINE_STATUS_PATH,
+                include_vin_header=True,
+                extra_headers=self._vehicle_metadata_headers(),
+            )
+        except LexusAURequestError as err:
+            self._engine_status_supported = False
+            LOGGER.debug(
+                "Engine status request %s failed: %s",
+                REMOTE_ENGINE_STATUS_PATH,
+                err,
+            )
+            return None
+
+    def _vehicle_metadata_headers(self) -> dict[str, str]:
+        """Build extra headers commonly required by vehicle-data endpoints."""
         headers = {"VIN": self._vin}
         region = self._vehicle_overview.raw.get("region")
         generation = self._vehicle_overview.raw.get("generation")

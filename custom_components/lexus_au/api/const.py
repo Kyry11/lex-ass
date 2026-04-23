@@ -13,9 +13,11 @@ PASSWORD_CHECK_PATH = "/openidm/endpoint/passwordService?_action=checkPassword"
 
 DEVICE_STATUS_PATH = "/v1/notification/device/status"
 REMOTE_STATUS_PATH = "/v1/global/remote/status"
+REMOTE_ENGINE_STATUS_PATH = "/v1/global/remote/engine-status"
 REMOTE_REFRESH_PATH = "/v1/global/remote/refresh-status"
 REMOTE_COMMAND_PATH = "/v1/global/remote/command"
 VEHICLE_GUID_PATH = "/v2/vehicle/guid"
+VEHICLE_LOCATION_PATH = "/v1/location"
 TELEMETRY_V2_PATH = "/v2/telemetry"
 TELEMETRY_V3_PATH = "/v3/telemetry"
 
