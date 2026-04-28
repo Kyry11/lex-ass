@@ -14,6 +14,7 @@ PLATFORMS: list[Platform] = [
     Platform.DEVICE_TRACKER,
     Platform.LOCK,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 CONF_DEVICE_ID = "device_id"

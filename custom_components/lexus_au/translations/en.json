@@ -119,6 +119,11 @@
         "name": "Vehicle lock"
       }
     },
+    "switch": {
+      "vehicle_engine": {
+        "name": "Vehicle engine"
+      }
+    },
     "sensor": {
       "last_vehicle_update": {
         "name": "Last vehicle update"
